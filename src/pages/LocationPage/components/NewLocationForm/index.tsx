@@ -42,14 +42,19 @@ function NewLocationForm({ onLocationAdd, locations }: NewLocationFormProps) {
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const cityName = event.currentTarget.cityName.value;
+    const cityName = event.currentTarget.cityName.value as string;
 
     if (!cityName) {
       setError({ show: true, text: 'Field should not be empty!' });
       return;
     }
 
-    if (data && data.getCityByName && data.getCityByName.name === cityName && !locations.byId[data.getCityByName.id]) {
+    if (
+      data &&
+      data.getCityByName &&
+      data.getCityByName.name.toLocaleLowerCase().localeCompare(cityName.toLocaleLowerCase()) === 0 &&
+      !locations.byId[data.getCityByName.id]
+    ) {
       onLocationAdd(data.getCityByName);
     } else {
       getCityByName({ variables: { name: cityName } });
@@ -64,8 +69,10 @@ function NewLocationForm({ onLocationAdd, locations }: NewLocationFormProps) {
 
   useEffect(() => {
     if (data) {
-      if (data.getCityByName) {
+      if (data.getCityByName && !locations.byId[data.getCityByName.id]) {
         onLocationAdd(data.getCityByName);
+      } else if (data.getCityByName && locations.byId[data.getCityByName.id]) {
+        setError({ show: true, text: 'You already have same location!' });
       } else {
         setError({ show: true, text: 'Location was not found!' });
       }
